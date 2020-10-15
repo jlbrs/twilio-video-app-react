@@ -1,5 +1,14 @@
 import React, { ChangeEvent, FormEvent } from 'react';
-import { Typography, makeStyles, TextField, Grid, Button, InputLabel, Theme } from '@material-ui/core';
+import {
+  Typography,
+  makeStyles,
+  TextField,
+  Grid,
+  Button,
+  InputLabel,
+  Theme,
+  CircularProgress,
+} from '@material-ui/core';
 import { useAppState } from '../../../state';
 
 const useStyles = makeStyles((theme: Theme) => ({
@@ -91,6 +100,7 @@ export default function RoomNameScreen({ name, roomName, setName, setRoomName, h
           </Grid>
         </form>
       )}
+      {(roomName || isFetching) && <CircularProgress />}
     </>
   );
 }
