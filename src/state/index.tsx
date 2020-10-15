@@ -20,6 +20,8 @@ export interface StateContextType {
   settings: Settings;
   dispatchSetting: React.Dispatch<SettingsAction>;
   roomType?: RoomType;
+  meetingId: string;
+  setMeetingId(meetingId: string): void;
 }
 
 export const StateContext = createContext<StateContextType>(null!);
@@ -38,6 +40,7 @@ export default function AppStateProvider(props: React.PropsWithChildren<{}>) {
   const [isFetching, setIsFetching] = useState(false);
   const [activeSinkId, setActiveSinkId] = useState('default');
   const [settings, dispatchSetting] = useReducer(settingsReducer, initialSettings);
+  const [meetingId, setMeetingId] = useState<string>('');
 
   let contextValue = {
     error,
@@ -47,6 +50,8 @@ export default function AppStateProvider(props: React.PropsWithChildren<{}>) {
     setActiveSinkId,
     settings,
     dispatchSetting,
+    meetingId,
+    setMeetingId,
   } as StateContextType;
 
   if (process.env.REACT_APP_SET_AUTH === 'firebase') {

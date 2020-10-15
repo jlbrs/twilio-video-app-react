@@ -37,10 +37,14 @@ interface RoomNameScreenProps {
 
 export default function RoomNameScreen({ name, roomName, setName, setRoomName, handleSubmit }: RoomNameScreenProps) {
   const classes = useStyles();
-  const { user } = useAppState();
+  const { user, isFetching, meetingId, setMeetingId } = useAppState();
 
   const handleNameChange = (event: ChangeEvent<HTMLInputElement>) => {
     setName(event.target.value);
+  };
+
+  const handleMeetingIdChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setMeetingId(event.target.value);
   };
 
   const handleRoomNameChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -52,57 +56,41 @@ export default function RoomNameScreen({ name, roomName, setName, setRoomName, h
   return (
     <>
       <Typography variant="h5" className={classes.gutterBottom}>
-        Join a Room
+        Join a Meeting
       </Typography>
       <Typography variant="body1">
-        {hasUsername
-          ? "Enter the name of a room you'd like to join."
-          : "Enter your name and the name of a room you'd like to join"}
+        {roomName ? `Loading meeting ${meetingId}...` : "Enter the id of the meeting you'd like to join"}
       </Typography>
-      <form onSubmit={handleSubmit}>
-        <div className={classes.inputContainer}>
-          {!hasUsername && (
+      {!roomName && !isFetching && (
+        <form onSubmit={handleSubmit}>
+          <div className={classes.inputContainer}>
             <div className={classes.textFieldContainer}>
-              <InputLabel shrink htmlFor="input-user-name">
-                Your Name
+              <InputLabel shrink htmlFor="input-meeting-id">
+                Meeting id
               </InputLabel>
               <TextField
-                id="input-user-name"
+                autoCapitalize="false"
+                id="input-meeting-id"
                 variant="outlined"
-                fullWidth
                 size="small"
-                value={name}
-                onChange={handleNameChange}
+                value={meetingId}
+                onChange={handleMeetingIdChange}
               />
             </div>
-          )}
-          <div className={classes.textFieldContainer}>
-            <InputLabel shrink htmlFor="input-room-name">
-              Room Name
-            </InputLabel>
-            <TextField
-              autoCapitalize="false"
-              id="input-room-name"
-              variant="outlined"
-              fullWidth
-              size="small"
-              value={roomName}
-              onChange={handleRoomNameChange}
-            />
           </div>
-        </div>
-        <Grid container justify="flex-end">
-          <Button
-            variant="contained"
-            type="submit"
-            color="primary"
-            disabled={!name || !roomName}
-            className={classes.continueButton}
-          >
-            Continue
-          </Button>
-        </Grid>
-      </form>
+          <Grid container justify="flex-end">
+            <Button
+              variant="contained"
+              type="submit"
+              color="primary"
+              disabled={!meetingId}
+              className={classes.continueButton}
+            >
+              Continue
+            </Button>
+          </Grid>
+        </form>
+      )}
     </>
   );
 }

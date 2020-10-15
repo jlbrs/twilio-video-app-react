@@ -15,9 +15,9 @@ export enum Steps {
 }
 
 export default function PreJoinScreens() {
-  const { user } = useAppState();
+  const { user, meetingId, setMeetingId } = useAppState();
   const { getAudioAndVideoTracks } = useVideoContext();
-  const { URLRoomName } = useParams();
+  const { URLMeetingId } = useParams();
   const [step, setStep] = useState(Steps.roomNameStep);
 
   const [name, setName] = useState<string>(user?.displayName || '');
@@ -26,13 +26,13 @@ export default function PreJoinScreens() {
   const [mediaError, setMediaError] = useState<Error>();
 
   useEffect(() => {
-    if (URLRoomName) {
-      setRoomName(URLRoomName);
+    if (URLMeetingId) {
+      setMeetingId(URLMeetingId);
       if (user?.displayName) {
         setStep(Steps.deviceSelectionStep);
       }
     }
-  }, [user, URLRoomName]);
+  }, [user, URLMeetingId]);
 
   useEffect(() => {
     if (step === Steps.deviceSelectionStep) {
@@ -48,7 +48,7 @@ export default function PreJoinScreens() {
     event.preventDefault();
     // If this app is deployed as a twilio function, don't change the URL because routing isn't supported.
     if (!window.location.origin.includes('twil.io')) {
-      window.history.replaceState(null, '', window.encodeURI(`/room/${roomName}${window.location.search || ''}`));
+      window.history.replaceState(null, '', window.encodeURI(`/meeting/${meetingId}${window.location.search || ''}`));
     }
     setStep(Steps.deviceSelectionStep);
   };
