@@ -17,12 +17,14 @@ export default function useGetPreflightTokens() {
       const publisherIdentity = 'participant-' + nanoid();
       const subscriberIdentity = 'participant-' + nanoid();
 
+      /*
       Promise.all([getToken(publisherIdentity, roomName), getToken(subscriberIdentity, roomName)])
         .then(tokens => {
           setTokens(tokens);
           setIsFetching(false);
         })
         .catch(error => setTokenError(error));
+*/
     }
   }, [getToken, isFetching, tokens]);
 

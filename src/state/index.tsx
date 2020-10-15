@@ -5,6 +5,7 @@ import { settingsReducer, initialSettings, Settings, SettingsAction } from './se
 import useFirebaseAuth from './useFirebaseAuth/useFirebaseAuth';
 import usePasscodeAuth from './usePasscodeAuth/usePasscodeAuth';
 import { User } from 'firebase';
+import axios from 'axios';
 
 export interface StateContextType {
   error: TwilioError | null;
@@ -68,11 +69,17 @@ export default function AppStateProvider(props: React.PropsWithChildren<{}>) {
     contextValue = {
       ...contextValue,
       getToken: async (identity, roomName) => {
-        const headers = new window.Headers();
-        const endpoint = process.env.REACT_APP_TOKEN_ENDPOINT || '/token';
-        const params = new window.URLSearchParams({ identity, roomName });
-
-        return fetch(`${endpoint}?${params}`, { headers }).then(res => res.text());
+        console.log(meetingId, roomName, identity);
+        return axios
+          .post('https://backend-functions-3559-dev.twil.io/user/join', {
+            meeting_id: meetingId,
+            room_id: roomName,
+            identity: identity,
+          })
+          .then(res => {
+            console.log(res.data);
+            return res.data.token;
+          });
       },
     };
   }
