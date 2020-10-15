@@ -9,6 +9,7 @@ import { useParams } from 'react-router-dom';
 import useVideoContext from '../../hooks/useVideoContext/useVideoContext';
 import Video from 'twilio-video';
 import axios from 'axios';
+import { SyncClient } from 'twilio-sync';
 
 export enum Steps {
   roomNameStep,
@@ -26,6 +27,16 @@ export default function PreJoinScreens() {
   const [syncInfo, setSyncInfo] = useState({ document: '', identity: '', token: '' });
 
   const [mediaError, setMediaError] = useState<Error>();
+
+  function extractDocumentData({ documentData }: { documentData: any }) {
+    if (documentData.room_id && documentData.room_id !== '') {
+      console.log('Got room', documentData.room_id);
+      setRoomName(documentData.room_id);
+      setStep(Steps.deviceSelectionStep);
+    } else {
+      setRoomName('');
+    }
+  }
 
   useEffect(() => {
     if (URLMeetingId) {
@@ -59,6 +70,29 @@ export default function PreJoinScreens() {
       setSyncInfo({ document: '', identity: '', token: '' });
     }
   }
+
+  // get the sync document (to extract the room id) and subscribe to it
+  useEffect(() => {
+    if (syncInfo.document !== '' && syncInfo.token !== '' && syncInfo.identity !== '') {
+      let syncClient = new SyncClient(syncInfo.token);
+      syncClient
+        .document(syncInfo.document)
+        .then(syncDocument => {
+          console.log(syncDocument);
+          extractDocumentData({ documentData: syncDocument.value });
+          syncDocument.on('updated', function(event) {
+            extractDocumentData({ documentData: event.value });
+          });
+        })
+        .catch(function(error) {
+          // @ts-ignore
+          setMediaError('Sorry, an error has occurred while connecting to the conferencing system. Please try again.');
+          console.error('Unexpected error', error);
+        });
+    } else {
+    }
+  }, [syncInfo]);
+
   useEffect(() => {
     if (step === Steps.deviceSelectionStep) {
       getAudioAndVideoTracks().catch(error => {
