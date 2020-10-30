@@ -53,7 +53,7 @@ export default function PreJoinScreens() {
     if (meetingId !== '') {
       console.log('Got meeting id :', meetingId);
       axios
-        .post('https://backend-functions-3559-dev.twil.io/user/enter-waiting-room', {
+        .post(`${process.env.BACKEND_BASE_URL}/user/enter-waiting-room`, {
           meeting_id: meetingId,
         })
         .then(res => {

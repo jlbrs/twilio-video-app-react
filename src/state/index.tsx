@@ -71,7 +71,7 @@ export default function AppStateProvider(props: React.PropsWithChildren<{}>) {
       getToken: async (identity, roomName) => {
         console.log(meetingId, roomName, identity);
         return axios
-          .post('https://backend-functions-3559-dev.twil.io/user/join', {
+          .post(`${process.env.BACKEND_BASE_URL}/user/join`, {
             meeting_id: meetingId,
             room_id: roomName,
             identity: identity,
