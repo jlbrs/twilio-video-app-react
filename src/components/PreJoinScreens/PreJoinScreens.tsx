@@ -15,7 +15,7 @@ export enum Steps {
 }
 
 export default function PreJoinScreens() {
-  const { user, meetingId, setMeetingId, roomId } = useAppState();
+  const { user, setMeetingId, roomId } = useAppState();
   const { getAudioAndVideoTracks } = useVideoContext();
   const { URLMeetingId } = useParams();
   const [step, setStep] = useState(Steps.roomNameStep);

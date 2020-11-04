@@ -81,21 +81,6 @@ export default function RoomNameScreen({ name, roomName, setName, setRoomName, h
       {!meetingId && (
         <form onSubmit={handleInputSubmit}>
           <div className={classes.inputContainer}>
-            {!hasUsername && (
-              <div className={classes.textFieldContainer}>
-                <InputLabel shrink htmlFor="input-user-name">
-                  Your Name
-                </InputLabel>
-                <TextField
-                  id="input-user-name"
-                  variant="outlined"
-                  fullWidth
-                  size="small"
-                  value={name}
-                  onChange={handleNameChange}
-                />
-              </div>
-            )}
             <div className={classes.textFieldContainer}>
               <InputLabel shrink htmlFor="input-meeting-id">
                 Meeting id

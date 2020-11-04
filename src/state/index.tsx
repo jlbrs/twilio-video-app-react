@@ -76,8 +76,7 @@ export default function AppStateProvider(props: React.PropsWithChildren<{}>) {
     contextValue = {
       ...contextValue,
       getToken: async (identity, roomName) => {
-        console.log(meetingId, roomName, identity);
-        return getVideoToken(meetingId, roomId, identity);
+        return getVideoToken(meetingId, roomId, syncInfo.identity);
       },
     };
   }
