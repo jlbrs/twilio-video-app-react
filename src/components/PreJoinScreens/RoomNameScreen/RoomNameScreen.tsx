@@ -74,7 +74,9 @@ export default function RoomNameScreen({ name, roomName, setName, setRoomName, h
         Join a Meeting
       </Typography>
       <Typography variant="body1">
-        {meetingId ? `Loading meeting ${meetingId}...` : "Enter the id of the meeting you'd like to join"}
+        {meetingId
+          ? `Waiting for the meeting ${meetingId} to start...`
+          : "Enter the id of the meeting you'd like to join"}
       </Typography>
       {!meetingId && (
         <form onSubmit={handleInputSubmit}>

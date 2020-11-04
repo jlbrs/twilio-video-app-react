@@ -6,8 +6,7 @@ import useFirebaseAuth from './useFirebaseAuth/useFirebaseAuth';
 import usePasscodeAuth from './usePasscodeAuth/usePasscodeAuth';
 import { User } from 'firebase';
 import axios from 'axios';
-import { checkMeetingId, extractDocumentData } from '../helpers/room-helpers';
-import Voice from 'twilio/lib/rest/Voice';
+import { checkMeetingId, extractDocumentData, getVideoToken } from '../helpers/room-helpers';
 import { SyncClient } from 'twilio-sync';
 
 export interface StateContextType {
@@ -78,16 +77,7 @@ export default function AppStateProvider(props: React.PropsWithChildren<{}>) {
       ...contextValue,
       getToken: async (identity, roomName) => {
         console.log(meetingId, roomName, identity);
-        return axios
-          .post(`${process.env.REACT_APP_BACKEND_BASE_URL}/user/join`, {
-            meeting_id: meetingId,
-            room_id: roomName,
-            identity: identity,
-          })
-          .then(res => {
-            console.log(res.data);
-            return res.data.token;
-          });
+        return getVideoToken(meetingId, roomId, identity);
       },
     };
   }

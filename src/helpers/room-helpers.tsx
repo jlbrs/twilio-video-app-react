@@ -42,3 +42,22 @@ export function extractDocumentData({ documentData }: { documentData: any }) {
     return null;
   }
 }
+
+export function getVideoToken(meetingId: string, roomId: string, identity: string) {
+  return new Promise<string>((resolve, reject) => {
+    axios
+      .post(`${process.env.REACT_APP_BACKEND_BASE_URL}/user/join`, {
+        meeting_id: meetingId,
+        room_id: roomId,
+        identity: identity,
+      })
+      .then(res => {
+        console.log('joined : ', res.data);
+        resolve(res.data.token);
+      })
+      .catch(e => {
+        console.error(e);
+        reject();
+      });
+  });
+}
