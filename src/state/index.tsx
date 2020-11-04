@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useState } from 'react';
+import React, { createContext, useContext, useEffect, useReducer, useState } from 'react';
 import { RoomType } from '../types';
 import { TwilioError } from 'twilio-video';
 import { settingsReducer, initialSettings, Settings, SettingsAction } from './settings/settingsReducer';
@@ -6,6 +6,9 @@ import useFirebaseAuth from './useFirebaseAuth/useFirebaseAuth';
 import usePasscodeAuth from './usePasscodeAuth/usePasscodeAuth';
 import { User } from 'firebase';
 import axios from 'axios';
+import { checkMeetingId, extractDocumentData } from '../helpers/room-helpers';
+import Voice from 'twilio/lib/rest/Voice';
+import { SyncClient } from 'twilio-sync';
 
 export interface StateContextType {
   error: TwilioError | null;
@@ -22,7 +25,9 @@ export interface StateContextType {
   dispatchSetting: React.Dispatch<SettingsAction>;
   roomType?: RoomType;
   meetingId: string;
+  roomId: string;
   setMeetingId(meetingId: string): void;
+  getRoom(meetingId: string, room: string, passcode?: string): Promise<string>;
 }
 
 export const StateContext = createContext<StateContextType>(null!);
@@ -42,6 +47,8 @@ export default function AppStateProvider(props: React.PropsWithChildren<{}>) {
   const [activeSinkId, setActiveSinkId] = useState('default');
   const [settings, dispatchSetting] = useReducer(settingsReducer, initialSettings);
   const [meetingId, setMeetingId] = useState<string>('');
+  const [syncInfo, setSyncInfo] = useState({ document: '', identity: '', token: '' });
+  const [roomId, setRoomId] = useState<string>('');
 
   let contextValue = {
     error,
@@ -53,6 +60,7 @@ export default function AppStateProvider(props: React.PropsWithChildren<{}>) {
     dispatchSetting,
     meetingId,
     setMeetingId,
+    roomId,
   } as StateContextType;
 
   if (process.env.REACT_APP_SET_AUTH === 'firebase') {
@@ -71,7 +79,7 @@ export default function AppStateProvider(props: React.PropsWithChildren<{}>) {
       getToken: async (identity, roomName) => {
         console.log(meetingId, roomName, identity);
         return axios
-          .post(`${process.env.BACKEND_BASE_URL}/user/join`, {
+          .post(`${process.env.REACT_APP_BACKEND_BASE_URL}/user/join`, {
             meeting_id: meetingId,
             room_id: roomName,
             identity: identity,
@@ -98,6 +106,43 @@ export default function AppStateProvider(props: React.PropsWithChildren<{}>) {
         return Promise.reject(err);
       });
   };
+
+  useEffect(() => {
+    if (meetingId == '') return;
+    if (!window.location.origin.includes('twil.io')) {
+      window.history.replaceState(null, '', window.encodeURI(`/meeting/${meetingId}${window.location.search || ''}`));
+    }
+    checkMeetingId(meetingId, setSyncInfo)
+      .then(() => {
+        console.log('room ok');
+      })
+      .catch(e => {
+        console.error(e);
+        // @ts-ignore
+        setError(e);
+        setMeetingId('');
+      });
+  }, [meetingId]);
+
+  useEffect(() => {
+    if (syncInfo.document !== '' && syncInfo.token !== '' && syncInfo.identity !== '') {
+      let syncClient = new SyncClient(syncInfo.token);
+      syncClient
+        .document(syncInfo.document)
+        .then(syncDocument => {
+          console.log(syncDocument);
+          setRoomId(extractDocumentData({ documentData: syncDocument.value }));
+          syncDocument.on('updated', function(event) {
+            setRoomId(extractDocumentData({ documentData: event.value }));
+          });
+        })
+        .catch(function(error) {
+          // @ts-ignore
+          setMediaError('Sorry, an error has occurred while connecting to the conferencing system. Please try again.');
+          console.error('Unexpected error', error);
+        });
+    }
+  }, [syncInfo]);
 
   return <StateContext.Provider value={{ ...contextValue, getToken }}>{props.children}</StateContext.Provider>;
 }

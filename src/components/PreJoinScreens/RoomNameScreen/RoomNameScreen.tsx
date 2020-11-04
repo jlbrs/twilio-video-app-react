@@ -1,4 +1,4 @@
-import React, { ChangeEvent, FormEvent } from 'react';
+import React, { ChangeEvent, FormEvent, useState } from 'react';
 import {
   Typography,
   makeStyles,
@@ -47,13 +47,14 @@ interface RoomNameScreenProps {
 export default function RoomNameScreen({ name, roomName, setName, setRoomName, handleSubmit }: RoomNameScreenProps) {
   const classes = useStyles();
   const { user, isFetching, meetingId, setMeetingId } = useAppState();
+  const [inputMeetingId, setInputMeetingId] = useState<string>(meetingId);
 
   const handleNameChange = (event: ChangeEvent<HTMLInputElement>) => {
     setName(event.target.value);
   };
 
-  const handleMeetingIdChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setMeetingId(event.target.value);
+  const handleInputMeetingIdChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setInputMeetingId(event.target.value);
   };
 
   const handleRoomNameChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -62,16 +63,21 @@ export default function RoomNameScreen({ name, roomName, setName, setRoomName, h
 
   const hasUsername = !window.location.search.includes('customIdentity=true') && user?.displayName;
 
+  const handleInputSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setMeetingId(inputMeetingId);
+  };
+
   return (
     <>
       <Typography variant="h5" className={classes.gutterBottom}>
         Join a Meeting
       </Typography>
       <Typography variant="body1">
-        {roomName ? `Loading meeting ${meetingId}...` : "Enter the id of the meeting you'd like to join"}
+        {meetingId ? `Loading meeting ${meetingId}...` : "Enter the id of the meeting you'd like to join"}
       </Typography>
-      {!roomName && !isFetching && (
-        <form onSubmit={handleSubmit}>
+      {!meetingId && (
+        <form onSubmit={handleInputSubmit}>
           <div className={classes.inputContainer}>
             <div className={classes.textFieldContainer}>
               <InputLabel shrink htmlFor="input-meeting-id">
@@ -82,8 +88,8 @@ export default function RoomNameScreen({ name, roomName, setName, setRoomName, h
                 id="input-meeting-id"
                 variant="outlined"
                 size="small"
-                value={meetingId}
-                onChange={handleMeetingIdChange}
+                value={inputMeetingId}
+                onChange={handleInputMeetingIdChange}
               />
             </div>
           </div>
@@ -92,15 +98,15 @@ export default function RoomNameScreen({ name, roomName, setName, setRoomName, h
               variant="contained"
               type="submit"
               color="primary"
-              disabled={!meetingId}
+              disabled={!inputMeetingId || isFetching}
               className={classes.continueButton}
             >
-              Continue
+              {isFetching ? <CircularProgress /> : 'Continue'}
             </Button>
           </Grid>
         </form>
       )}
-      {(roomName || isFetching) && <CircularProgress />}
+      {meetingId && <CircularProgress />}
     </>
   );
 }
