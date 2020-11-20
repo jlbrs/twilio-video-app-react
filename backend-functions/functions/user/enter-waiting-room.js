@@ -1,4 +1,6 @@
 const uuid = require('uuid');
+const Sync = require(Runtime.getFunctions()['helpers/sync'].path).Sync;
+const SSO = require(Runtime.getFunctions()['helpers/sso'].path).SSO;
 
 exports.handler = async function(context, event, callback) {
     console.log("customer trying to enter waiting room");
@@ -30,6 +32,8 @@ exports.handler = async function(context, event, callback) {
         return;
     }
 
+    const {is_admin} = await SSO.checkAccess(event.token, document.data.createdByUserId, context);
+
     console.log("Creating an authorization token for this user");
     const authorization = await Sync.authorizeClient(meeting_id, identity, context);
     if(!authorization) {
@@ -41,60 +45,8 @@ exports.handler = async function(context, event, callback) {
     }
     response.appendHeader('Content-Type', 'application/json');
     response.setStatusCode(200);
-    response.setBody(Sync.createToken(meeting_id, identity, context));
-
+    let r = Sync.createToken(meeting_id, identity, context);
+    r.is_admin = is_admin;
+    response.setBody(r);
     callback(null, response);
-};
-
-const Sync = {
-    getRoomDocument: function (meeting_id, context) {
-        return new Promise((resolve, reject) => {
-            const client = context.getTwilioClient();
-            client.sync.services(context.SYNC_SERVICE_ID)
-                .documents(meeting_id)
-                .fetch()
-                .then(resolve)
-                .catch(() => {
-                    resolve(null)
-                });
-        });
-    },
-
-    createToken: function(meeting_id, identity, context) {
-        let AccessToken = require('twilio').jwt.AccessToken;
-        let SyncGrant = AccessToken.SyncGrant;
-
-        // Create a "grant" identifying the Sync service instance for this app.
-        let syncGrant = new SyncGrant({
-            serviceSid: context.SYNC_SERVICE_ID,
-        });
-        // Create an access token which we will sign and return to the client,
-        // containing the grant we just created and specifying his identity.
-        let token = new AccessToken(
-            context.ACCOUNT_SID,
-            context.TWILIO_API_KEY,
-            context.TWILIO_API_SECRET
-        );
-        token.addGrant(syncGrant);
-        token.identity = identity;
-
-        return {
-            document: meeting_id,
-            identity: identity,
-            token: token.toJwt()
-        }
-    },
-
-
-    authorizeClient: function (document_sid, identity, context) {
-        return new Promise((resolve, reject) => {
-            const client = context.getTwilioClient();
-            client.sync.services(context.SYNC_SERVICE_ID)
-                .documents(document_sid)
-                .documentPermissions(identity)
-                .update({read: true, write: false, manage: false})
-                .then(document_permission => resolve(document_permission))
-                .catch(() => {resolve(null)});
-        });
-    }
 };

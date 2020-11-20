@@ -1,3 +1,5 @@
+const Sync = require(Runtime.getFunctions()['helpers/sync'].path).Sync;
+
 exports.handler = async function(context, event, callback) {
     console.log("room webhook: " + event.StatusCallbackEvent);
     let response = new Twilio.Response();
@@ -24,7 +26,9 @@ exports.handler = async function(context, event, callback) {
     }
 
     console.log('removing room_id ');
-    let result = await Sync.updateSyncDocument(document.sid, {}, context);
+    let new_data = document.data;
+    delete new_data['room_id'];
+    let result = await Sync.updateSyncDocument(document.sid, new_data, context);
     if(!result) {
         response.setStatusCode(500);
         response.setBody("Error: couldn't publish the new room");
@@ -33,33 +37,3 @@ exports.handler = async function(context, event, callback) {
         return;
     }
 }
-
-const Sync = {
-    getRoomDocument: function (meeting_id, context) {
-        return new Promise((resolve, reject) => {
-            const client = context.getTwilioClient();
-            client.sync.services(context.SYNC_SERVICE_ID)
-                .documents(meeting_id)
-                .fetch()
-                .then(resolve)
-                .catch(() => {
-                    resolve(null)
-                });
-        });
-    },
-
-    updateSyncDocument: function (document_sid, new_data, context) {
-        return new Promise((resolve, reject) => {
-            const client = context.getTwilioClient();
-            client.sync.services(context.SYNC_SERVICE_ID)
-                .documents(document_sid)
-                .update({data: new_data})
-                .then(() => {
-                    resolve(true)
-                })
-                .catch(() => {
-                    resolve(false)
-                });
-        });
-    },
-};
