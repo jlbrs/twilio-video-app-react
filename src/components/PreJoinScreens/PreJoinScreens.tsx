@@ -8,6 +8,8 @@ import { useAppState } from '../../state';
 import { useParams } from 'react-router-dom';
 import useVideoContext from '../../hooks/useVideoContext/useVideoContext';
 import Video from 'twilio-video';
+import AdminLogin from '../AdminLogin/AdminLogin';
+import AdminLoginMessage from '../AdminLogin/AdminLoginMessage';
 
 export enum Steps {
   roomNameStep,
@@ -32,7 +34,7 @@ export default function PreJoinScreens() {
         setStep(Steps.roomNameStep);
       }
     }
-  }, [user, URLMeetingId]);
+  }, [user, URLMeetingId, setMeetingId]);
 
   useEffect(() => {
     if (roomId) {
@@ -89,6 +91,7 @@ export default function PreJoinScreens() {
       {step === Steps.deviceSelectionStep && (
         <DeviceSelectionScreen name={name} roomName={roomName} setStep={setStep} />
       )}
+      <AdminLoginMessage />
     </IntroContainer>
   );
 }

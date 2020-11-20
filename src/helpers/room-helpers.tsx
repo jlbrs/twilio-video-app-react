@@ -1,16 +1,14 @@
-import { Steps } from '../components/PreJoinScreens/PreJoinScreens';
 import axios from 'axios';
-import { SyncClient } from 'twilio-sync';
-import { useState } from 'react';
+import { useAppState } from '../state';
 
 export function checkMeetingId(
   meetingId: string,
-  setSyncInfo: (arg0: { document: any; identity: any; token: any }) => void
+  setSyncInfo: (arg0: { document: string; identity: string; token: string; is_admin: boolean }) => void,
+  tokenId: string
 ) {
-  setSyncInfo({ document: '', identity: '', token: '' });
   return new Promise<string>((resolve, reject) => {
-    if (meetingId == '') {
-      setSyncInfo({ document: '', identity: '', token: '' });
+    if (!meetingId) {
+      setSyncInfo({ document: '', identity: '', token: '', is_admin: false });
       reject();
     } else {
       console.log('Got meeting id :', meetingId);
@@ -18,15 +16,20 @@ export function checkMeetingId(
       axios
         .post(`${process.env.REACT_APP_BACKEND_BASE_URL}/user/enter-waiting-room`, {
           meeting_id: meetingId,
+          token: tokenId,
         })
         .then(res => {
           console.log(res.data);
-          setSyncInfo({ document: res.data.document, identity: res.data.identity, token: res.data.token });
-          //setName(res.data.identity);
+          setSyncInfo({
+            document: res.data.document,
+            identity: res.data.identity,
+            token: res.data.token,
+            is_admin: res.data.is_admin,
+          });
           resolve();
         })
         .catch(reason => {
-          setSyncInfo({ document: '', identity: '', token: '' });
+          setSyncInfo({ document: '', identity: '', token: '', is_admin: false });
           console.error('axios error: ', reason);
           reject();
         });
@@ -43,21 +46,37 @@ export function extractDocumentData({ documentData }: { documentData: any }) {
   }
 }
 
-export function getVideoToken(meetingId: string, roomId: string, identity: string) {
+export function getVideoToken(meetingId: string, roomId: string, identity: string, tokenId?: string) {
   return new Promise<string>((resolve, reject) => {
-    axios
-      .post(`${process.env.REACT_APP_BACKEND_BASE_URL}/user/join`, {
-        meeting_id: meetingId,
-        room_id: roomId,
-        identity: identity,
-      })
-      .then(res => {
-        console.log('joined : ', res.data);
-        resolve(res.data.token);
-      })
-      .catch(e => {
-        console.error(e);
-        reject();
-      });
+    if (tokenId) {
+      axios
+        .post(`${process.env.REACT_APP_BACKEND_BASE_URL}/admin/join`, {
+          meeting_id: meetingId,
+          token: tokenId,
+        })
+        .then(res => {
+          console.log('joined : ', res.data.video_params);
+          resolve(res.data.video_params.token);
+        })
+        .catch(e => {
+          console.error(e);
+          reject();
+        });
+    } else {
+      axios
+        .post(`${process.env.REACT_APP_BACKEND_BASE_URL}/user/join`, {
+          meeting_id: meetingId,
+          room_id: roomId,
+          identity: identity,
+        })
+        .then(res => {
+          console.log('joined : ', res.data);
+          resolve(res.data.token);
+        })
+        .catch(e => {
+          console.error(e);
+          reject();
+        });
+    }
   });
 }

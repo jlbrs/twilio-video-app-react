@@ -5,9 +5,9 @@ import { settingsReducer, initialSettings, Settings, SettingsAction } from './se
 import useFirebaseAuth from './useFirebaseAuth/useFirebaseAuth';
 import usePasscodeAuth from './usePasscodeAuth/usePasscodeAuth';
 import { User } from 'firebase';
-import axios from 'axios';
 import { checkMeetingId, extractDocumentData, getVideoToken } from '../helpers/room-helpers';
 import { SyncClient } from 'twilio-sync';
+import AdminLogin from '../components/AdminLogin/AdminLogin';
 
 export interface StateContextType {
   error: TwilioError | null;
@@ -27,6 +27,10 @@ export interface StateContextType {
   roomId: string;
   setMeetingId(meetingId: string): void;
   getRoom(meetingId: string, room: string, passcode?: string): Promise<string>;
+  googleUser: any;
+  setGoogleUser: any;
+  name: any;
+  tokenId: any;
 }
 
 export const StateContext = createContext<StateContextType>(null!);
@@ -46,8 +50,9 @@ export default function AppStateProvider(props: React.PropsWithChildren<{}>) {
   const [activeSinkId, setActiveSinkId] = useState('default');
   const [settings, dispatchSetting] = useReducer(settingsReducer, initialSettings);
   const [meetingId, setMeetingId] = useState<string>('');
-  const [syncInfo, setSyncInfo] = useState({ document: '', identity: '', token: '' });
+  const [syncInfo, setSyncInfo] = useState({ document: '', identity: '', token: '', is_admin: false });
   const [roomId, setRoomId] = useState<string>('');
+  const { googleUser, setGoogleUser, name, tokenId } = AdminLogin();
 
   let contextValue = {
     error,
@@ -60,6 +65,10 @@ export default function AppStateProvider(props: React.PropsWithChildren<{}>) {
     meetingId,
     setMeetingId,
     roomId,
+    googleUser,
+    setGoogleUser,
+    name,
+    tokenId,
   } as StateContextType;
 
   if (process.env.REACT_APP_SET_AUTH === 'firebase') {
@@ -76,7 +85,7 @@ export default function AppStateProvider(props: React.PropsWithChildren<{}>) {
     contextValue = {
       ...contextValue,
       getToken: async (identity, roomName) => {
-        return getVideoToken(meetingId, roomId, syncInfo.identity);
+        return getVideoToken(meetingId, roomId, syncInfo.identity, tokenId);
       },
     };
   }
@@ -101,7 +110,7 @@ export default function AppStateProvider(props: React.PropsWithChildren<{}>) {
     if (!window.location.origin.includes('twil.io')) {
       window.history.replaceState(null, '', window.encodeURI(`/meeting/${meetingId}${window.location.search || ''}`));
     }
-    checkMeetingId(meetingId, setSyncInfo)
+    checkMeetingId(meetingId, setSyncInfo, tokenId)
       .then(() => {
         console.log('room ok');
       })
