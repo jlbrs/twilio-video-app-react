@@ -35,7 +35,7 @@
     "strip-color": "^0.1.0",
     "twilio": "^3.39.3",
     "twilio-sync": "^0.12.3",
-    "twilio-video": "2.8.0-beta.2",
+    "twilio-video": "^2.9.0",
     "typescript": "^3.8.3"
   },
   "devDependencies": {
