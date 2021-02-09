@@ -1,5 +1,5 @@
 import { GoogleLoginResponse } from 'react-google-login';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function AdminLogin() {
   const [googleUser, setGoogleUser] = useState<GoogleLoginResponse | null>(null);

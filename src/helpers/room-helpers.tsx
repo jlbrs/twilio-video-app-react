@@ -11,15 +11,14 @@ export function checkMeetingId(
       setSyncInfo({ document: '', identity: '', token: '', is_admin: false });
       reject();
     } else {
-      console.log('Got meeting id :', meetingId);
-      console.log('backend :', process.env);
+      console.log('2. Got meeting id: ', meetingId, ', checking if it exists...');
       axios
         .post(`${process.env.REACT_APP_BACKEND_BASE_URL}/user/enter-waiting-room`, {
           meeting_id: meetingId,
           token: tokenId,
         })
         .then(res => {
-          console.log(res.data);
+          console.log('3. Meeting id accepted, updating SyncInfo with data: ', res.data);
           setSyncInfo({
             document: res.data.document,
             identity: res.data.identity,
@@ -39,7 +38,6 @@ export function checkMeetingId(
 
 export function extractDocumentData({ documentData }: { documentData: any }) {
   if (documentData.room_id && documentData.room_id !== '') {
-    console.log('Got room', documentData.room_id);
     return documentData.room_id;
   } else {
     return null;
@@ -49,13 +47,14 @@ export function extractDocumentData({ documentData }: { documentData: any }) {
 export function getVideoToken(meetingId: string, roomId: string, identity: string, tokenId?: string) {
   return new Promise<string>((resolve, reject) => {
     if (tokenId) {
+      console.log('7. Trying to connect to room: ', roomId, ' as an admin.');
       axios
         .post(`${process.env.REACT_APP_BACKEND_BASE_URL}/admin/join`, {
           meeting_id: meetingId,
           token: tokenId,
         })
         .then(res => {
-          console.log('joined : ', res.data.video_params);
+          console.log('8. Joined : ', res.data.video_params);
           resolve(res.data.video_params.token);
         })
         .catch(e => {
@@ -63,6 +62,7 @@ export function getVideoToken(meetingId: string, roomId: string, identity: strin
           reject();
         });
     } else {
+      console.log('7. Trying to connect to room: ', roomId, ' as a participant.');
       axios
         .post(`${process.env.REACT_APP_BACKEND_BASE_URL}/user/join`, {
           meeting_id: meetingId,
@@ -70,7 +70,7 @@ export function getVideoToken(meetingId: string, roomId: string, identity: strin
           identity: identity,
         })
         .then(res => {
-          console.log('joined : ', res.data);
+          console.log('8. Joined : ', res.data);
           resolve(res.data.token);
         })
         .catch(e => {

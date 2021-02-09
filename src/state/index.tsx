@@ -107,13 +107,14 @@ export default function AppStateProvider(props: React.PropsWithChildren<{}>) {
   };
 
   useEffect(() => {
-    if (meetingId == '') return;
+    if (meetingId === '') return;
     if (!window.location.origin.includes('twil.io')) {
       window.history.replaceState(null, '', window.encodeURI(`/meeting/${meetingId}${window.location.search || ''}`));
     }
+    console.log('1. A Meeting id was set!');
     checkMeetingId(meetingId, setSyncInfo, tokenId)
       .then(() => {
-        console.log('room ok');
+        // console.log('Meeting id accepted');
       })
       .catch(e => {
         console.error(e);
@@ -121,25 +122,38 @@ export default function AppStateProvider(props: React.PropsWithChildren<{}>) {
         setError(e);
         setMeetingId('');
       });
-  }, [meetingId]);
+  }, [meetingId, tokenId]);
 
   useEffect(() => {
     if (syncInfo.document !== '' && syncInfo.token !== '' && syncInfo.identity !== '') {
-      let syncClient = new SyncClient(syncInfo.token);
-      syncClient
-        .document(syncInfo.document)
-        .then(syncDocument => {
-          console.log(syncDocument);
-          setRoomId(extractDocumentData({ documentData: syncDocument.value }));
-          syncDocument.on('updated', function(event) {
-            setRoomId(extractDocumentData({ documentData: event.value }));
+      console.log('4. Got sync document id: ', syncInfo.document);
+      if (syncInfo.is_admin) {
+        console.log('5. looks like your are the room owner, follow me sir!');
+        setRoomId('admin');
+      } else {
+        let syncClient = new SyncClient(syncInfo.token);
+        syncClient
+          .document(syncInfo.document)
+          .then(syncDocument => {
+            console.log(
+              '5. SyncDocument: ',
+              syncDocument.value,
+              ', trying to find room id in there, and registering to receive the updates'
+            );
+            const content = syncDocument.value;
+            setRoomId(extractDocumentData({ documentData: syncDocument.value }));
+            syncDocument.on('updated', function(event) {
+              setRoomId(extractDocumentData({ documentData: event.value }));
+            });
+          })
+          .catch(function(error) {
+            // @ts-ignore
+            setMediaError(
+              'Sorry, an error has occurred while connecting to the conferencing system. Please try again.'
+            );
+            console.error('Unexpected error', error);
           });
-        })
-        .catch(function(error) {
-          // @ts-ignore
-          setMediaError('Sorry, an error has occurred while connecting to the conferencing system. Please try again.');
-          console.error('Unexpected error', error);
-        });
+      }
     }
   }, [syncInfo]);
 

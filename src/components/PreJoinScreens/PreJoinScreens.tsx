@@ -38,14 +38,13 @@ export default function PreJoinScreens() {
 
   useEffect(() => {
     if (roomId) {
-      console.log('got room ', roomId);
       setRoomName(roomId);
     }
   }, [roomId]);
 
   useEffect(() => {
     if (roomName) {
-      console.log('got room name ', roomName);
+      console.log('6. Ready to connect to room: ', roomName);
       setStep(Steps.deviceSelectionStep);
     }
   }, [roomName]);
